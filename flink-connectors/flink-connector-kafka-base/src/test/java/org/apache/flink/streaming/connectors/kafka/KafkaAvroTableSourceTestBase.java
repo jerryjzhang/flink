@@ -31,6 +31,7 @@ import org.junit.Test;
 
 import java.sql.Timestamp;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
@@ -135,7 +136,7 @@ public abstract class KafkaAvroTableSourceTestBase extends KafkaTableSourceTestB
 		KafkaAvroTableSource.Builder b = (KafkaAvroTableSource.Builder) getBuilder();
 		b.forAvroRecordClass(HasMapFieldsAvroClass.class)
 			.forTopic("test")
-			.withKafkaProperties(new Properties())
+			.withKafkaProperties(createSourceProperties())
 			.withSchema(new TableSchema(HasMapFieldsAvroClass.FIELD_NAMES,
 				HasMapFieldsAvroClass.FIELD_TYPES));
 
@@ -159,6 +160,47 @@ public abstract class KafkaAvroTableSourceTestBase extends KafkaTableSourceTestB
 		assertEquals(Types.MAP(Types.STRING(), Types.FLOAT()), returnType.getTypeAt(3));
 		assertEquals(Types.MAP(Types.STRING(), Types.DOUBLE()), returnType.getTypeAt(4));
 		assertEquals(Types.MAP(Types.STRING(), Types.BOOLEAN()), returnType.getTypeAt(5));
+
+		// check if DataStream type matches with TableSource.getReturnType()
+		assertEquals(source.getReturnType(),
+			source.getDataStream(StreamExecutionEnvironment.getExecutionEnvironment()).getType());
+	}
+
+	@Test
+	public void testHasArrayFieldsAvroClass() {
+		KafkaAvroTableSource.Builder b = (KafkaAvroTableSource.Builder) getBuilder();
+		b.forAvroRecordClass(HasArrayFieldsAvroClass.class)
+			.forTopic("test")
+			.withKafkaProperties(createSourceProperties())
+			.withSchema(new TableSchema(HasArrayFieldsAvroClass.FIELD_NAMES,
+				HasArrayFieldsAvroClass.FIELD_TYPES));
+
+		KafkaAvroTableSource source = (KafkaAvroTableSource) b.build();
+
+		// check return type
+		RowTypeInfo returnType = (RowTypeInfo) source.getReturnType();
+		assertNotNull(returnType);
+		assertEquals(6, returnType.getArity());
+		// check field names
+		assertEquals("strArrayField", returnType.getFieldNames()[0]);
+		assertEquals("intArrayField", returnType.getFieldNames()[1]);
+		assertEquals("longArrayField", returnType.getFieldNames()[2]);
+		assertEquals("floatArrayField", returnType.getFieldNames()[3]);
+		assertEquals("doubleArrayField", returnType.getFieldNames()[4]);
+		assertEquals("boolArrayField", returnType.getFieldNames()[5]);
+		// check field types
+		assertEquals(org.apache.flink.api.common.typeinfo.Types.LIST(Types.STRING()),
+			returnType.getTypeAt(0));
+		assertEquals(org.apache.flink.api.common.typeinfo.Types.LIST(Types.INT()),
+			returnType.getTypeAt(1));
+		assertEquals(org.apache.flink.api.common.typeinfo.Types.LIST(Types.LONG()),
+			returnType.getTypeAt(2));
+		assertEquals(org.apache.flink.api.common.typeinfo.Types.LIST(Types.FLOAT()),
+			returnType.getTypeAt(3));
+		assertEquals(org.apache.flink.api.common.typeinfo.Types.LIST(Types.DOUBLE()),
+			returnType.getTypeAt(4));
+		assertEquals(org.apache.flink.api.common.typeinfo.Types.LIST(Types.BOOLEAN()),
+			returnType.getTypeAt(5));
 
 		// check if DataStream type matches with TableSource.getReturnType()
 		assertEquals(source.getReturnType(),
@@ -251,6 +293,47 @@ public abstract class KafkaAvroTableSourceTestBase extends KafkaTableSourceTestB
 		public Map<String, Float> floatMapField;
 		public Map<String, Double> doubleMapField;
 		public Map<String, Boolean> boolMapField;
+
+		@Override
+		public Schema getSchema() {
+			return null;
+		}
+
+		@Override
+		public Object get(int field) {
+			return null;
+		}
+
+		@Override
+		public void put(int field, Object value) { }
+	}
+
+	/**
+	 * Avro record that has array fields.
+	 */
+	@SuppressWarnings("unused")
+	public static class HasArrayFieldsAvroClass extends SpecificRecordBase {
+
+		public static final String[] FIELD_NAMES = new String[]{
+			"strArrayField", "intArrayField", "longArrayField", "floatArrayField", "doubleArrayField", "boolArrayField"};
+		public static final TypeInformation[] FIELD_TYPES = new TypeInformation[]{
+			org.apache.flink.api.common.typeinfo.Types.LIST(Types.STRING()),
+			org.apache.flink.api.common.typeinfo.Types.LIST(Types.INT()),
+			org.apache.flink.api.common.typeinfo.Types.LIST(Types.LONG()),
+			org.apache.flink.api.common.typeinfo.Types.LIST(Types.FLOAT()),
+			org.apache.flink.api.common.typeinfo.Types.LIST(Types.DOUBLE()),
+			org.apache.flink.api.common.typeinfo.Types.LIST(Types.BOOLEAN())};
+
+		//CHECKSTYLE.OFF: StaticVariableNameCheck - Avro accesses this field by name via reflection.
+		public static Schema SCHEMA$ = AvroTestUtils.createFlatAvroSchema(FIELD_NAMES, FIELD_TYPES);
+		//CHECKSTYLE.ON: StaticVariableNameCheck
+
+		public List<String> strArrayField;
+		public List<Integer> intArrayField;
+		public List<Long> longArrayField;
+		public List<Float> floatArrayField;
+		public List<Double> doubleArrayField;
+		public List<Boolean> boolArrayField;
 
 		@Override
 		public Schema getSchema() {

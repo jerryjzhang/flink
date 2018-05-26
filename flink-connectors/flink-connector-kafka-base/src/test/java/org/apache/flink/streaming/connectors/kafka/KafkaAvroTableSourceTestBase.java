@@ -22,6 +22,7 @@ import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.api.java.typeutils.RowTypeInfo;
 import org.apache.flink.formats.avro.utils.AvroTestUtils;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
+import org.apache.flink.table.api.TableSchema;
 import org.apache.flink.table.api.Types;
 
 import org.apache.avro.Schema;
@@ -31,6 +32,7 @@ import org.junit.Test;
 import java.sql.Timestamp;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Properties;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -128,6 +130,41 @@ public abstract class KafkaAvroTableSourceTestBase extends KafkaTableSourceTestB
 			source.getDataStream(StreamExecutionEnvironment.getExecutionEnvironment()).getType());
 	}
 
+	@Test
+	public void testHasMapFieldsAvroClass() {
+		KafkaAvroTableSource.Builder b = (KafkaAvroTableSource.Builder) getBuilder();
+		b.forAvroRecordClass(HasMapFieldsAvroClass.class)
+			.forTopic("test")
+			.withKafkaProperties(new Properties())
+			.withSchema(new TableSchema(HasMapFieldsAvroClass.FIELD_NAMES,
+				HasMapFieldsAvroClass.FIELD_TYPES));
+
+		KafkaAvroTableSource source = (KafkaAvroTableSource) b.build();
+
+		// check return type
+		RowTypeInfo returnType = (RowTypeInfo) source.getReturnType();
+		assertNotNull(returnType);
+		assertEquals(6, returnType.getArity());
+		// check field names
+		assertEquals("strMapField", returnType.getFieldNames()[0]);
+		assertEquals("intMapField", returnType.getFieldNames()[1]);
+		assertEquals("longMapField", returnType.getFieldNames()[2]);
+		assertEquals("floatMapField", returnType.getFieldNames()[3]);
+		assertEquals("doubleMapField", returnType.getFieldNames()[4]);
+		assertEquals("boolMapField", returnType.getFieldNames()[5]);
+		// check field types
+		assertEquals(Types.MAP(Types.STRING(), Types.STRING()), returnType.getTypeAt(0));
+		assertEquals(Types.MAP(Types.STRING(), Types.INT()), returnType.getTypeAt(1));
+		assertEquals(Types.MAP(Types.STRING(), Types.LONG()), returnType.getTypeAt(2));
+		assertEquals(Types.MAP(Types.STRING(), Types.FLOAT()), returnType.getTypeAt(3));
+		assertEquals(Types.MAP(Types.STRING(), Types.DOUBLE()), returnType.getTypeAt(4));
+		assertEquals(Types.MAP(Types.STRING(), Types.BOOLEAN()), returnType.getTypeAt(5));
+
+		// check if DataStream type matches with TableSource.getReturnType()
+		assertEquals(source.getReturnType(),
+			source.getDataStream(StreamExecutionEnvironment.getExecutionEnvironment()).getType());
+	}
+
 	/**
 	 * Avro record that matches the table schema.
 	 */
@@ -191,4 +228,41 @@ public abstract class KafkaAvroTableSourceTestBase extends KafkaTableSourceTestB
 		public void put(int field, Object value) { }
 	}
 
+	/**
+	 * Avro record that has map fields.
+	 */
+	@SuppressWarnings("unused")
+	public static class HasMapFieldsAvroClass extends SpecificRecordBase {
+
+		public static final String[] FIELD_NAMES = new String[]{
+			"strMapField", "intMapField", "longMapField", "floatMapField", "doubleMapField", "boolMapField"};
+		public static final TypeInformation[] FIELD_TYPES = new TypeInformation[]{
+			Types.MAP(Types.STRING(), Types.STRING()), Types.MAP(Types.STRING(), Types.INT()),
+			Types.MAP(Types.STRING(), Types.LONG()), Types.MAP(Types.STRING(), Types.FLOAT()),
+			Types.MAP(Types.STRING(), Types.DOUBLE()), Types.MAP(Types.STRING(), Types.BOOLEAN())};
+
+		//CHECKSTYLE.OFF: StaticVariableNameCheck - Avro accesses this field by name via reflection.
+		public static Schema SCHEMA$ = AvroTestUtils.createFlatAvroSchema(FIELD_NAMES, FIELD_TYPES);
+		//CHECKSTYLE.ON: StaticVariableNameCheck
+
+		public Map<String, String> strMapField;
+		public Map<String, Integer> intMapField;
+		public Map<String, Long> longMapField;
+		public Map<String, Float> floatMapField;
+		public Map<String, Double> doubleMapField;
+		public Map<String, Boolean> boolMapField;
+
+		@Override
+		public Schema getSchema() {
+			return null;
+		}
+
+		@Override
+		public Object get(int field) {
+			return null;
+		}
+
+		@Override
+		public void put(int field, Object value) { }
+	}
 }

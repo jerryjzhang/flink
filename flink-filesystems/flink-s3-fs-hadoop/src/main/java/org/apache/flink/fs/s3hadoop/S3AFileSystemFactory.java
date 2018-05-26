@@ -16,33 +16,14 @@
  * limitations under the License.
  */
 
-package org.apache.flink.table.annotation;
-
-import org.apache.flink.table.catalog.TableSourceConverter;
-
-import java.lang.annotation.Documented;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+package org.apache.flink.fs.s3hadoop;
 
 /**
- * Annotates a table type of a {@link TableSourceConverter}.
- *
- * @deprecated Use the more generic [[org.apache.flink.table.sources.TableSourceFactory]] interface
- * with Java service loaders instead.
+ * Simple factory for the S3 file system, registered for the <tt>s3a://</tt> scheme.
  */
-@Documented
-@Target(ElementType.TYPE)
-@Retention(RetentionPolicy.RUNTIME)
-@Deprecated
-public @interface TableType {
-
-	/**
-	 * Returns the table type of a {@link TableSourceConverter}.
-	 *
-	 * @return The table type of the {@link TableSourceConverter}.
-	 */
-	String value();
-
+public class S3AFileSystemFactory extends S3FileSystemFactory {
+	@Override
+	public String getScheme() {
+		return "s3a";
+	}
 }

@@ -74,7 +74,11 @@ public abstract class KafkaAvroTableSourceTestBase extends KafkaTableSourceTestB
 		// check field mapping
 		assertNull(source.getFieldMapping());
 
+<<<<<<< HEAD
 		// check if DataStream.type matches with TableSource.getReturnType()
+=======
+		// check if DataStream type matches with TableSource.getReturnType()
+>>>>>>> upstream/master
 		assertEquals(source.getReturnType(),
 			source.getDataStream(StreamExecutionEnvironment.getExecutionEnvironment()).getType());
 	}
@@ -123,7 +127,11 @@ public abstract class KafkaAvroTableSourceTestBase extends KafkaTableSourceTestB
 		assertEquals("otherField2", fieldMapping.get("field2"));
 		assertEquals("otherField3", fieldMapping.get("field3"));
 
+<<<<<<< HEAD
 		// check if DataStream.type matches with TableSource.getReturnType()
+=======
+		// check if DataStream type matches with TableSource.getReturnType()
+>>>>>>> upstream/master
 		assertEquals(source.getReturnType(),
 			source.getDataStream(StreamExecutionEnvironment.getExecutionEnvironment()).getType());
 	}

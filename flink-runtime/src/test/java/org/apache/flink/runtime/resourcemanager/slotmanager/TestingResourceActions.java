@@ -16,34 +16,29 @@
  * limitations under the License.
  */
 
-package org.apache.flink.streaming.api.scala
+package org.apache.flink.runtime.resourcemanager.slotmanager;
 
-import org.apache.flink.configuration.Configuration
-import org.apache.flink.test.util.MiniClusterResource.MiniClusterResourceConfiguration
-import org.apache.flink.test.util.{MiniClusterResource, TestBaseUtils}
-import org.junit.{After, Before}
-import org.scalatest.junit.JUnitSuiteLike
+import org.apache.flink.api.common.JobID;
+import org.apache.flink.runtime.clusterframework.types.AllocationID;
+import org.apache.flink.runtime.clusterframework.types.ResourceProfile;
+import org.apache.flink.runtime.instance.InstanceID;
 
-trait ScalaStreamingMultipleProgramsTestBase
-  extends TestBaseUtils
-  with  JUnitSuiteLike {
+/**
+ * Testing implementation of the {@link ResourceActions}.
+ */
+public class TestingResourceActions implements ResourceActions {
+	@Override
+	public void releaseResource(InstanceID instanceId, Exception cause) {
 
-  val parallelism = 4
-  var cluster: Option[MiniClusterResource] = None
+	}
 
-  @Before
-  def beforeAll(): Unit = {
-    val cl = new MiniClusterResource(
-      new MiniClusterResourceConfiguration(new Configuration(), 1, parallelism)
-    )
+	@Override
+	public void allocateResource(ResourceProfile resourceProfile) {
 
-    cl.before()
+	}
 
-    cluster = Some(cl)
-  }
+	@Override
+	public void notifyAllocationFailure(JobID jobId, AllocationID allocationId, Exception cause) {
 
-  @After
-  def afterAll(): Unit = {
-    cluster.foreach { c => c.after() }
-  }
+	}
 }

@@ -18,16 +18,22 @@
 
 package org.apache.flink.formats.avro;
 
+import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.api.java.tuple.Tuple3;
+import org.apache.flink.api.java.typeutils.RowTypeInfo;
 import org.apache.flink.formats.avro.utils.AvroTestUtils;
+import org.apache.flink.table.api.Types;
 import org.apache.flink.types.Row;
 import org.apache.flink.util.InstantiationUtil;
 
+import org.apache.avro.Schema;
 import org.apache.avro.specific.SpecificRecord;
 import org.apache.avro.specific.SpecificRecordBase;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.util.List;
+import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 
@@ -143,5 +149,116 @@ public class AvroRowDeSerializationSchemaTest {
 		final Row actual = deserCopy.deserialize(bytes);
 
 		assertEquals(testData.f2, actual);
+	}
+
+	@Test
+	public void testHasMapFieldsAvroClass(){
+		AvroRowDeserializationSchema schema = new AvroRowDeserializationSchema(HasMapFieldsAvroClass.class);
+		RowTypeInfo returnType = (RowTypeInfo) schema.getProducedType();
+
+		assertEquals(Types.MAP(Types.STRING(), Types.STRING()), returnType.getTypeAt(0));
+		assertEquals(Types.MAP(Types.STRING(), Types.INT()), returnType.getTypeAt(1));
+		assertEquals(Types.MAP(Types.STRING(), Types.LONG()), returnType.getTypeAt(2));
+		assertEquals(Types.MAP(Types.STRING(), Types.FLOAT()), returnType.getTypeAt(3));
+		assertEquals(Types.MAP(Types.STRING(), Types.DOUBLE()), returnType.getTypeAt(4));
+		assertEquals(Types.MAP(Types.STRING(), Types.BOOLEAN()), returnType.getTypeAt(5));
+	}
+
+	@Test
+	public void testHasArrayFieldsAvroClass(){
+		AvroRowDeserializationSchema schema = new AvroRowDeserializationSchema(HasArrayFieldsAvroClass.class);
+		RowTypeInfo returnType = (RowTypeInfo) schema.getProducedType();
+
+		assertEquals(org.apache.flink.api.common.typeinfo.Types.LIST(Types.STRING()),
+			returnType.getTypeAt(0));
+		assertEquals(org.apache.flink.api.common.typeinfo.Types.LIST(Types.INT()),
+			returnType.getTypeAt(1));
+		assertEquals(org.apache.flink.api.common.typeinfo.Types.LIST(Types.LONG()),
+			returnType.getTypeAt(2));
+		assertEquals(org.apache.flink.api.common.typeinfo.Types.LIST(Types.FLOAT()),
+			returnType.getTypeAt(3));
+		assertEquals(org.apache.flink.api.common.typeinfo.Types.LIST(Types.DOUBLE()),
+			returnType.getTypeAt(4));
+		assertEquals(org.apache.flink.api.common.typeinfo.Types.LIST(Types.BOOLEAN()),
+			returnType.getTypeAt(5));
+	}
+
+	/**
+	 * Avro record that has map fields.
+	 */
+	@SuppressWarnings("unused")
+	public static class HasMapFieldsAvroClass extends SpecificRecordBase {
+
+		public static final String[] FIELD_NAMES = new String[]{
+			"strMapField", "intMapField", "longMapField", "floatMapField", "doubleMapField", "boolMapField"};
+		public static final TypeInformation[] FIELD_TYPES = new TypeInformation[]{
+			Types.MAP(Types.STRING(), Types.STRING()), Types.MAP(Types.STRING(), Types.INT()),
+			Types.MAP(Types.STRING(), Types.LONG()), Types.MAP(Types.STRING(), Types.FLOAT()),
+			Types.MAP(Types.STRING(), Types.DOUBLE()), Types.MAP(Types.STRING(), Types.BOOLEAN())};
+
+		//CHECKSTYLE.OFF: StaticVariableNameCheck - Avro accesses this field by name via reflection.
+		public static Schema SCHEMA$ = AvroTestUtils.createFlatAvroSchema(FIELD_NAMES, FIELD_TYPES);
+		//CHECKSTYLE.ON: StaticVariableNameCheck
+
+		public Map<String, String> strMapField;
+		public Map<String, Integer> intMapField;
+		public Map<String, Long> longMapField;
+		public Map<String, Float> floatMapField;
+		public Map<String, Double> doubleMapField;
+		public Map<String, Boolean> boolMapField;
+
+		@Override
+		public Schema getSchema() {
+			return null;
+		}
+
+		@Override
+		public Object get(int field) {
+			return null;
+		}
+
+		@Override
+		public void put(int field, Object value) { }
+	}
+
+	/**
+	 * Avro record that has array fields.
+	 */
+	@SuppressWarnings("unused")
+	public static class HasArrayFieldsAvroClass extends SpecificRecordBase {
+
+		public static final String[] FIELD_NAMES = new String[]{
+			"strArrayField", "intArrayField", "longArrayField", "floatArrayField", "doubleArrayField", "boolArrayField"};
+		public static final TypeInformation[] FIELD_TYPES = new TypeInformation[]{
+			org.apache.flink.api.common.typeinfo.Types.LIST(Types.STRING()),
+			org.apache.flink.api.common.typeinfo.Types.LIST(Types.INT()),
+			org.apache.flink.api.common.typeinfo.Types.LIST(Types.LONG()),
+			org.apache.flink.api.common.typeinfo.Types.LIST(Types.FLOAT()),
+			org.apache.flink.api.common.typeinfo.Types.LIST(Types.DOUBLE()),
+			org.apache.flink.api.common.typeinfo.Types.LIST(Types.BOOLEAN())};
+
+		//CHECKSTYLE.OFF: StaticVariableNameCheck - Avro accesses this field by name via reflection.
+		public static Schema SCHEMA$ = AvroTestUtils.createFlatAvroSchema(FIELD_NAMES, FIELD_TYPES);
+		//CHECKSTYLE.ON: StaticVariableNameCheck
+
+		public List<String> strArrayField;
+		public List<Integer> intArrayField;
+		public List<Long> longArrayField;
+		public List<Float> floatArrayField;
+		public List<Double> doubleArrayField;
+		public List<Boolean> boolArrayField;
+
+		@Override
+		public Schema getSchema() {
+			return null;
+		}
+
+		@Override
+		public Object get(int field) {
+			return null;
+		}
+
+		@Override
+		public void put(int field, Object value) { }
 	}
 }

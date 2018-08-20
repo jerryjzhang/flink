@@ -89,7 +89,7 @@ class TableDescriptorTest extends TableTestBase {
       "format.fields.1.name" -> "myfield2",
       "format.fields.1.type" -> "INT",
       "format.fields.2.name" -> "myfield3",
-      "format.fields.2.type" -> "MAP<VARCHAR,INT>",
+      "format.fields.2.type" -> "MAP<VARCHAR, INT>",
       "format.fields.3.name" -> "myfield4",
       "format.fields.3.type" -> "MULTISET<BIGINT>",
       "format.field-delimiter" -> "#",
@@ -98,7 +98,7 @@ class TableDescriptorTest extends TableTestBase {
       "schema.1.name" -> "myfield2",
       "schema.1.type" -> "INT",
       "schema.2.name" -> "myfield3",
-      "schema.2.type" -> "MAP<VARCHAR,INT>",
+      "schema.2.type" -> "MAP<VARCHAR, INT>",
       "schema.3.name" -> "myfield4",
       "schema.3.type" -> "MULTISET<BIGINT>"
     )

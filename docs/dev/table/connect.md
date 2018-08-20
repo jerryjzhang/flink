@@ -417,13 +417,15 @@ DECIMAL
 DATE
 TIME
 TIMESTAMP
-ROW(fieldtype, ...)              # unnamed row; e.g. ROW(VARCHAR, INT) that is mapped to Flink's RowTypeInfo
+MAP<fieldtype, fieldtype>        # generic map; e.g. MAP<VARCHAR, INT> that is mapped to Flink's MapTypeInfo
+MULTISET<fieldtype>              # multiset; e.g. MULTISET<VARCHAR> that is mapped to Flink's MultisetTypeInfo
+ROW<fieldtype, ...>              # unnamed row; e.g. ROW<VARCHAR, INT> that is mapped to Flink's RowTypeInfo
                                  # with indexed fields names f0, f1, ...
-ROW(fieldname fieldtype, ...)    # named row; e.g., ROW(myField VARCHAR, myOtherField INT) that
+ROW<fieldname fieldtype, ...>    # named row; e.g., ROW<myField VARCHAR, myOtherField INT> that
                                  # is mapped to Flink's RowTypeInfo
-POJO(class)                      # e.g., POJO(org.mycompany.MyPojoClass) that is mapped to Flink's PojoTypeInfo
-ANY(class)                       # e.g., ANY(org.mycompany.MyClass) that is mapped to Flink's GenericTypeInfo
-ANY(class, serialized)           # used for type information that is not supported by Flink's Table & SQL API
+POJO<class>                      # e.g., POJO(org.mycompany.MyPojoClass) that is mapped to Flink's PojoTypeInfo
+ANY<class>                       # e.g., ANY(org.mycompany.MyClass) that is mapped to Flink's GenericTypeInfo
+ANY<class, serialized>           # used for type information that is not supported by Flink's Table & SQL API
 {% endhighlight %}
 
 {% top %}

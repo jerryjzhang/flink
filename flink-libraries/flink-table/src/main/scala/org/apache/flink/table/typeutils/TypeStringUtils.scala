@@ -76,6 +76,13 @@ object TypeStringUtils extends JavaTokenParsers with PackratParsers {
   lazy val base64Url: Parser[String] =
     """[A-Za-z0-9_-]*""".r
 
+  // keep parenthesis to ensure backward compatibility
+  lazy val leftBracket: PackratParser[(String)] =
+    "(" | "<"
+
+  lazy val rightBracket: PackratParser[(String)] =
+    ")" | ">"
+
   lazy val atomic: PackratParser[TypeInformation[_]] =
     (VARCHAR | STRING) ^^ { e => Types.STRING } |
     BOOLEAN ^^ { e => Types.BOOLEAN } |
@@ -103,23 +110,23 @@ object TypeStringUtils extends JavaTokenParsers with PackratParsers {
     }
 
   lazy val namedRow: PackratParser[TypeInformation[_]] =
-    ROW ~ "(" ~> rep1sep(field, ",") <~ ")" ^^ {
+    ROW ~ leftBracket ~> rep1sep(field, ", ") <~ rightBracket ^^ {
       fields => Types.ROW(fields.map(_._1).toArray, fields.map(_._2).toArray)
     } | failure("Named row type expected.")
 
   lazy val unnamedRow: PackratParser[TypeInformation[_]] =
-    ROW ~ "(" ~> rep1sep(typeInfo, ",") <~ ")" ^^ {
+    ROW ~ leftBracket ~> rep1sep(typeInfo, ", ") <~ rightBracket ^^ {
       types => Types.ROW(types: _*)
     } | failure("Unnamed row type expected.")
 
   lazy val generic: PackratParser[TypeInformation[_]] =
-    ANY ~ "(" ~> qualifiedName <~ ")" ^^ {
+    ANY ~ leftBracket ~> qualifiedName <~ rightBracket ^^ {
       typeClass =>
         val clazz = loadClass(typeClass)
         new GenericTypeInfo[AnyRef](clazz.asInstanceOf[Class[AnyRef]])
     }
 
-  lazy val pojo: PackratParser[TypeInformation[_]] = POJO ~ "(" ~> qualifiedName <~ ")" ^^ {
+  lazy val pojo: PackratParser[TypeInformation[_]] = POJO ~ leftBracket ~> qualifiedName <~ rightBracket ^^ {
     typeClass =>
       val clazz = loadClass(typeClass)
       val info = TypeExtractor.createTypeInfo(clazz)
@@ -130,7 +137,7 @@ object TypeStringUtils extends JavaTokenParsers with PackratParsers {
   }
 
   lazy val any: PackratParser[TypeInformation[_]] =
-    ANY ~ "(" ~ qualifiedName ~ "," ~ base64Url ~ ")" ^^ {
+    ANY ~ leftBracket ~ qualifiedName ~ "," ~ base64Url ~ rightBracket ^^ {
       case _ ~ _ ~ typeClass ~ _ ~ serialized ~ _=>
         val clazz = loadClass(typeClass)
         val typeInfo = deserialize(serialized)
@@ -143,13 +150,13 @@ object TypeStringUtils extends JavaTokenParsers with PackratParsers {
     }
 
   lazy val genericMap: PackratParser[TypeInformation[_]] =
-    MAP ~ "<" ~ typeInfo ~ "," ~ typeInfo ~ ">" ^^ {
+    MAP ~ leftBracket ~ typeInfo ~ "," ~ typeInfo ~ rightBracket ^^ {
       case _ ~ _ ~ keyTypeInfo ~ _ ~ valueTypeInfo ~ _=>
         Types.MAP(keyTypeInfo, valueTypeInfo)
     }
 
   lazy val multiSet: PackratParser[TypeInformation[_]] =
-    MULTISET ~ "<" ~ typeInfo ~ ">" ^^ {
+    MULTISET ~ leftBracket ~ typeInfo ~ rightBracket ^^ {
       case _ ~ _ ~ elementTypeInfo ~ _ =>
         Types.MULTISET(elementTypeInfo)
     }
@@ -199,10 +206,10 @@ object TypeStringUtils extends JavaTokenParsers with PackratParsers {
 
         s"$name ${normalizeTypeInfo(f._2)}"
       }
-      s"${ROW.key}(${normalizedFields.mkString(", ")})"
+      s"${ROW.key}<${normalizedFields.mkString(", ")}>"
 
     case generic: GenericTypeInfo[_] =>
-      s"${ANY.key}(${generic.getTypeClass.getName})"
+      s"${ANY.key}<${generic.getTypeClass.getName}>"
 
     case pojo: PojoTypeInfo[_] =>
       // we only support very simple POJOs that only contain extracted fields
@@ -213,7 +220,7 @@ object TypeStringUtils extends JavaTokenParsers with PackratParsers {
         case _: InvalidTypesException => None
       }
       extractedInfo match {
-        case Some(ei) if ei == pojo => s"${POJO.key}(${pojo.getTypeClass.getName})"
+        case Some(ei) if ei == pojo => s"${POJO.key}<${pojo.getTypeClass.getName}>"
         case _ =>
           throw new TableException(
             "A string representation for custom POJO types is not supported yet.")
@@ -233,10 +240,10 @@ object TypeStringUtils extends JavaTokenParsers with PackratParsers {
     case map: MapTypeInfo[_, _] =>
       val normalizedKey = normalizeTypeInfo(map.getKeyTypeInfo)
       val normalizedValue = normalizeTypeInfo(map.getValueTypeInfo)
-      s"${MAP.key}<${normalizedKey},${normalizedValue}>"
+      s"${MAP.key}<${normalizedKey}, ${normalizedValue}>"
 
     case any: TypeInformation[_] =>
-      s"${ANY.key}(${any.getTypeClass.getName}, ${serialize(any)})"
+      s"${ANY.key}<${any.getTypeClass.getName}, ${serialize(any)}>"
   }
 
   // ----------------------------------------------------------------------------------------------

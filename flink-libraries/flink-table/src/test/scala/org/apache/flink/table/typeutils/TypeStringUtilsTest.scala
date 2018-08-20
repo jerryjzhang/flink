@@ -64,34 +64,40 @@ class TypeStringUtilsTest {
   @Test
   def testWriteComplexTypes(): Unit = {
     testReadAndWrite(
-      "ROW(f0 DECIMAL, f1 TINYINT)",
+      "ROW<f0 DECIMAL, f1 TINYINT>",
       Types.ROW(Types.DECIMAL, Types.BYTE))
 
     testReadAndWrite(
-      "ROW(hello DECIMAL, world TINYINT)",
+      "ROW<hello DECIMAL, world TINYINT>",
       Types.ROW(
         Array[String]("hello", "world"),
         Array[TypeInformation[_]](Types.DECIMAL, Types.BYTE)))
 
     testReadAndWrite(
-      "POJO(org.apache.flink.table.runtime.utils.CommonTestData$Person)",
+      "POJO<org.apache.flink.table.runtime.utils.CommonTestData$Person>",
       TypeExtractor.createTypeInfo(classOf[Person]))
 
     testReadAndWrite(
-      "ANY(org.apache.flink.table.runtime.utils.CommonTestData$NonPojo)",
+      "ANY<org.apache.flink.table.runtime.utils.CommonTestData$NonPojo>",
       TypeExtractor.createTypeInfo(classOf[NonPojo]))
 
     testReadAndWrite(
-      "MAP<VARCHAR,ROW(f0 DECIMAL, f1 TINYINT)>",
+      "MAP<VARCHAR, ROW<f0 DECIMAL, f1 TINYINT>>",
       Types.MAP(Types.STRING, Types.ROW(Types.DECIMAL, Types.BYTE))
     )
 
     testReadAndWrite(
-      "MULTISET<ROW(f0 DECIMAL, f1 TINYINT)>",
+      "MULTISET<ROW<f0 DECIMAL, f1 TINYINT>>",
       Types.MULTISET(Types.ROW(Types.DECIMAL, Types.BYTE))
     )
 
     // test escaping
+    assertTrue(
+      TypeStringUtils.readTypeInfo("ROW<\"he         \\nllo\" DECIMAL, world TINYINT>")
+        .asInstanceOf[RowTypeInfo].getFieldNames
+        .sameElements(Array[String]("he         \nllo", "world")))
+
+    // test backward compatibility with brackets ()
     assertTrue(
       TypeStringUtils.readTypeInfo("ROW(\"he         \\nllo\" DECIMAL, world TINYINT)")
         .asInstanceOf[RowTypeInfo].getFieldNames
